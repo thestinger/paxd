@@ -70,7 +70,7 @@ static void update_attributes() {
 int main(void) {
     update_attributes();
 
-    alignas(struct inotify_event) char buf[sizeof(struct inotify_event) + NAME_MAX + 1];
+    alignas(struct inotify_event) char buf[(sizeof(struct inotify_event) + NAME_MAX + 1) * 64];
 
     int inotify = inotify_init();
     if (inotify == -1) {
@@ -79,6 +79,11 @@ int main(void) {
     }
     int watch_conf = inotify_add_watch(inotify, "/etc/paxd.conf", IN_MODIFY);
     if (watch_conf == -1) {
+        perror("inotify_add_watch");
+        return EXIT_FAILURE;
+    }
+    int watch_conf_dir = inotify_add_watch(inotify, "/etc/", IN_CREATE | IN_MOVED_TO);
+    if (watch_conf_dir == -1) {
         perror("inotify_add_watch");
         return EXIT_FAILURE;
     }
@@ -101,15 +106,15 @@ int main(void) {
 
             if (event->wd == watch_conf) {
                 fprintf(stderr, "configuration modified, updating attributes\n");
-                update_attributes();
-                break;
-            }
-
-            if (event->wd == watch_pacman && !strcmp(event->name, "db.lck")) {
+            } else if (event->wd == watch_conf_dir && !strcmp(event->name, "paxd.conf")) {
+                fprintf(stderr, "configuration created or moved to, updating attributes\n");
+            } else if (event->wd == watch_pacman && !strcmp(event->name, "db.lck")) {
                 fprintf(stderr, "pacman finished a transaction, updating attributes\n");
-                update_attributes();
-                break;
+            } else {
+                continue;
             }
+            update_attributes();
+            break;
         }
     }
 }
