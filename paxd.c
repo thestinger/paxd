@@ -11,8 +11,8 @@
 #include <sys/inotify.h>
 #include <sys/xattr.h>
 
-static void apply(const char *flags, const char *path) {
-    if (setxattr(path, "user.pax.flags", flags, strlen(flags), 0) == -1) {
+static void apply(const char *flags, size_t flags_len, const char *path) {
+    if (setxattr(path, "user.pax.flags", flags, flags_len, 0) == -1) {
         if (errno != ENOENT) {
             fprintf(stderr, "could not apply attributes to %s: %m\n", path);
         }
@@ -44,14 +44,20 @@ static void update_attributes() {
             continue; // ignore empty lines and comments
         }
 
-        char *saveptr;
-        char *flags = strtok_r(line, " \t", &saveptr);
-        if (!flags) {
-            fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
-            break;
+        char *flags;
+        for (flags = line; *flags == ' ' || *flags == '\t'; flags++); // skip initial whitespace
+
+        char *split; // find the end of the specified flags
+        for (split = flags; *split != ' ' && *split != '\t'; split++) {
+            if (*split == '\0') {
+                fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
+                break;
+            }
         }
-        char *path = strtok_r(NULL, " \t", &saveptr);
-        if (!path || *path != '/') {
+
+        char *path;
+        for (path = split + 1; *path == ' ' || *path == '\t'; path++);
+        if (*path == '\0') {
             fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
             break;
         }
@@ -60,7 +66,8 @@ static void update_attributes() {
             line[bytes_read - 1] = '\0';
         }
 
-        apply(flags, path);
+        size_t flags_len = (size_t)(split - flags);
+        apply(flags, flags_len, path);
     }
 
     free(line);
