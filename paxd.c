@@ -44,19 +44,15 @@ static void update_attributes() {
             continue; // ignore empty lines and comments
         }
 
-        char *flags;
-        for (flags = line; *flags == ' ' || *flags == '\t'; flags++); // skip initial whitespace
+        char *flags = line + strspn(line, " \t"); // skip initial whitespace
 
-        char *split; // find the end of the specified flags
-        for (split = flags; *split != ' ' && *split != '\t'; split++) {
-            if (*split == '\0') {
-                fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
-                break;
-            }
+        char *split = flags + strcspn(flags, " \t"); // find the end of the specified flags
+        if (*split == '\0') {
+            fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
+            break;
         }
 
-        char *path;
-        for (path = split + 1; *path == ' ' || *path == '\t'; path++);
+        char *path = split + strspn(split, " \t"); // find the start of the path
         if (*path == '\0') {
             fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
             break;
