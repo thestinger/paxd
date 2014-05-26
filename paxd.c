@@ -44,15 +44,15 @@ static void update_attributes() {
             continue; // ignore empty lines and comments
         }
 
-        char *flags = line + strspn(line, " \t"); // skip initial whitespace
+        const char *flags = line + strspn(line, " \t"); // skip initial whitespace
 
-        char *split = flags + strcspn(flags, " \t"); // find the end of the specified flags
+        const char *split = flags + strcspn(flags, " \t"); // find the end of the specified flags
         if (*split == '\0') {
             fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
             break;
         }
 
-        char *path = split + strspn(split, " \t"); // find the start of the path
+        const char *path = split + strspn(split, " \t"); // find the start of the path
         if (*path == '\0' || *path != '/') {
             fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
             break;
