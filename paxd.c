@@ -53,7 +53,7 @@ static void update_attributes() {
         }
 
         char *path = split + strspn(split, " \t"); // find the start of the path
-        if (*path == '\0') {
+        if (*path == '\0' || *path != '/') {
             fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
             break;
         }
