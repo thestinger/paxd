@@ -74,6 +74,15 @@ static void update_attributes() {
     fclose(conf);
 }
 
+static int inotify_add_watch_x(int fd, const char *pathname, uint32_t mask) {
+    int watch = inotify_add_watch(fd, pathname, mask);
+    if (watch == -1) {
+        perror("inotify_add_watch");
+        exit(EXIT_FAILURE);
+    }
+    return watch;
+}
+
 int main(void) {
     update_attributes();
 
@@ -84,21 +93,9 @@ int main(void) {
         perror("inotify");
         return EXIT_FAILURE;
     }
-    int watch_conf = inotify_add_watch(inotify, "/etc/paxd.conf", IN_MODIFY);
-    if (watch_conf == -1) {
-        perror("inotify_add_watch");
-        return EXIT_FAILURE;
-    }
-    int watch_conf_dir = inotify_add_watch(inotify, "/etc/", IN_CREATE | IN_MOVED_TO);
-    if (watch_conf_dir == -1) {
-        perror("inotify_add_watch");
-        return EXIT_FAILURE;
-    }
-    int watch_pacman = inotify_add_watch(inotify, "/var/lib/pacman/", IN_DELETE);
-    if (watch_pacman == -1) {
-        perror("inotify_add_watch");
-        return EXIT_FAILURE;
-    }
+    int watch_conf = inotify_add_watch_x(inotify, "/etc/paxd.conf", IN_MODIFY);
+    int watch_conf_dir = inotify_add_watch_x(inotify, "/etc/", IN_CREATE | IN_MOVED_TO);
+    int watch_pacman = inotify_add_watch_x(inotify, "/var/lib/pacman/", IN_DELETE);
 
     for (;;) {
         ssize_t bytes_read = read(inotify, buf, sizeof buf);
@@ -115,6 +112,8 @@ int main(void) {
                 fprintf(stderr, "configuration modified, updating attributes\n");
             } else if (event->wd == watch_conf_dir && !strcmp(event->name, "paxd.conf")) {
                 fprintf(stderr, "configuration created or moved to, updating attributes\n");
+                close(watch_conf);
+                watch_conf = inotify_add_watch_x(inotify, "/etc/paxd.conf", IN_MODIFY);
             } else if (event->wd == watch_pacman && !strcmp(event->name, "db.lck")) {
                 fprintf(stderr, "pacman finished a transaction, updating attributes\n");
             } else {
