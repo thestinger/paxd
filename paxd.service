@@ -3,6 +3,7 @@ Description=PaX exception daemon
 DefaultDependencies=no
 After=systemd-readahead-collect.service systemd-readahead-replay.service
 Before=sysinit.target
+RequiresMountsFor=/var
 
 [Service]
 ExecStart=/usr/bin/paxd
