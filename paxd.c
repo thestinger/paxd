@@ -66,7 +66,7 @@ static void update_attributes() {
         }
 
         const char *path = split + strspn(split, " \t"); // find the start of the path
-        if (*path == '\0' || *path != '/') {
+        if (*path != '/') {
             line_ignored(n, line);
             break;
         }
