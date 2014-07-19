@@ -20,6 +20,10 @@ static void apply(const char *flags, size_t flags_len, const char *path) {
     }
 }
 
+static void line_ignored(size_t n, const char *line) {
+    fprintf(stderr, "ignored invalid line %zu in /etc/paxd.conf: %s", n, line);
+}
+
 static void update_attributes() {
     FILE *conf = fopen("/etc/paxd.conf", "r");
     if (!conf) {
@@ -30,7 +34,7 @@ static void update_attributes() {
     char *line = NULL;
     size_t line_len = 0;
 
-    for (;;) {
+    for (size_t n = 1;; n++) {
         ssize_t bytes_read = getline(&line, &line_len, conf);
         if (bytes_read == -1) {
             if (ferror(conf)) {
@@ -49,21 +53,21 @@ static void update_attributes() {
 
         const char *split = flags + strcspn(flags, " \t"); // find the end of the specified flags
         if (*split == '\0') {
-            fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
+            line_ignored(n, line);
             break;
         }
 
         const char *valid = "pemrs";
         for (const char *flag = flags; flag < split; flag++) {
             if (!strchr(valid, tolower(*flag))) {
-                fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
+                line_ignored(n, line);
                 break;
             }
         }
 
         const char *path = split + strspn(split, " \t"); // find the start of the path
         if (*path == '\0' || *path != '/') {
-            fprintf(stderr, "ignored invalid line in /etc/paxd.conf: %s", line);
+            line_ignored(n, line);
             break;
         }
 
