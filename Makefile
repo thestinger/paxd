@@ -1,6 +1,6 @@
 CC = clang
-CFLAGS := -std=c11 -D_GNU_SOURCE -O2 -flto $(CFLAGS)
-LDFLAGS := -O2 -flto -Wl,--as-needed,--gc-sections $(LDFLAGS)
+CFLAGS := -std=c11 -D_GNU_SOURCE -O2 -flto -fuse-ld=gold $(CFLAGS)
+LDFLAGS := -O2 -flto -fuse-ld=gold -Wl,--as-needed,--gc-sections $(LDFLAGS)
 
 ifeq ($(CC), clang)
 	CFLAGS += -Weverything -Wno-cast-align -Wno-disabled-macro-expansion
