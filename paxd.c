@@ -1,6 +1,7 @@
 #include <err.h>
 #include <limits.h>
 #include <stdalign.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,25 +40,32 @@ int main(void) {
             return EXIT_FAILURE;
         }
 
+        bool update = false;
         for (char *p = buf; p < buf + bytes_read; ) {
             struct inotify_event *event = (struct inotify_event *)p;
             p += sizeof (struct inotify_event) + event->len;
 
-            if (event->wd == watch_conf) {
-                fprintf(stderr, "configuration modified, updating attributes\n");
+            if (event->wd == -1) {
+                fprintf(stderr, "event queue overflowed\n");
+                update = true;
+            } else if (event->wd == watch_conf) {
+                fprintf(stderr, "configuration file modified\n");
+                update = true;
             } else if (event->wd == watch_conf_dir && !strcmp(event->name, "paxd.conf")) {
-                fprintf(stderr, "configuration created or moved to, updating attributes\n");
+                fprintf(stderr, "configuration file created or replaced\n");
                 // Watches are automatically released when the corresponding file is deleted. It is
                 // not possible to improve on that with inotify_rm_watch because the descriptor may
                 // have already been recycled for another file.
                 watch_conf = inotify_add_watch_x(inotify, "/etc/paxd.conf", IN_MODIFY);
+                update = true;
             } else if (event->wd == watch_pacman && !strcmp(event->name, "db.lck")) {
-                fprintf(stderr, "pacman finished a transaction, updating attributes\n");
-            } else {
-                continue;
+                fprintf(stderr, "pacman finished a transaction\n");
+                update = true;
             }
+        }
+        if (update) {
+            fprintf(stderr, "updating attributes\n");
             update_attributes();
-            break;
         }
     }
 }
