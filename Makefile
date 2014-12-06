@@ -1,5 +1,6 @@
 CC = clang
-CFLAGS := -std=c11 -D_GNU_SOURCE -O2 -flto -fuse-ld=gold $(CFLAGS)
+CFLAGS := -std=c11 -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE \
+	  -O2 -flto -fuse-ld=gold $(CFLAGS)
 LDFLAGS := -O2 -flto -fuse-ld=gold -Wl,--as-needed,--gc-sections $(LDFLAGS)
 
 ifeq ($(CC), clang)
