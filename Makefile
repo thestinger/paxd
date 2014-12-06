@@ -23,6 +23,6 @@ install: paxd paxd.conf
 	install -Dm600 paxd.conf $(DESTDIR)/etc/paxd.conf
 	install -Dm644 paxd.service $(DESTDIR)/usr/lib/systemd/system/paxd.service
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system/sysinit.target.wants
-	cd $(DESTDIR)/usr/lib/systemd/system/sysinit.target.wants; ln -sf ../paxd.service .
+	ln -t $(DESTDIR)/usr/lib/systemd/system/sysinit.target.wants -sf ../paxd.service
 
 .PHONY: all clean install
