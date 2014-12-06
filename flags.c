@@ -15,8 +15,8 @@ static void apply(const char *flags, size_t flags_len, const char *path) {
     }
 }
 
-static void line_ignored(size_t n, const char *line) {
-    fprintf(stderr, "ignored invalid line %zu in /etc/paxd.conf: %s", n, line);
+static void line_ignored(off_t n, const char *line) {
+    fprintf(stderr, "ignored invalid line %lld in /etc/paxd.conf: %s", (long long)n, line);
 }
 
 void update_attributes(void) {
@@ -29,7 +29,7 @@ void update_attributes(void) {
     char *line = NULL;
     size_t line_len = 0;
 
-    for (size_t n = 1;; n++) {
+    for (off_t n = 1;; n++) {
         ssize_t bytes_read = getline(&line, &line_len, conf);
         if (bytes_read == -1) {
             if (ferror(conf)) {
