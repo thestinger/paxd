@@ -34,10 +34,8 @@ void update_attributes(void) {
         if (bytes_read == -1) {
             if (ferror(conf)) {
                 perror("failed to read line from /etc/paxd.conf");
-                break;
-            } else {
-                break;
             }
+            break;
         }
 
         if (line[0] == '\n' || line[0] == '\0' || line[0] == '#') {
