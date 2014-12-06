@@ -47,7 +47,9 @@ int main(void) {
                 fprintf(stderr, "configuration modified, updating attributes\n");
             } else if (event->wd == watch_conf_dir && !strcmp(event->name, "paxd.conf")) {
                 fprintf(stderr, "configuration created or moved to, updating attributes\n");
-                close(watch_conf);
+                // Watches are automatically released when the corresponding file is deleted. It is
+                // not possible to improve on that with inotify_rm_watch because the descriptor may
+                // have already been recycled for another file.
                 watch_conf = inotify_add_watch_x(inotify, "/etc/paxd.conf", IN_MODIFY);
             } else if (event->wd == watch_pacman && !strcmp(event->name, "db.lck")) {
                 fprintf(stderr, "pacman finished a transaction, updating attributes\n");
