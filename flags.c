@@ -47,21 +47,25 @@ void update_attributes(void) {
         const char *split = flags + strcspn(flags, " \t"); // find the end of the specified flags
         if (*split == '\0') {
             line_ignored(n, line);
-            break;
+            continue;
         }
 
         const char *valid = "pemrs";
-        for (const char *flag = flags; flag < split; flag++) {
+        const char *flag;
+        for (flag = flags; flag < split; flag++) {
             if (!strchr(valid, tolower(*flag))) {
-                line_ignored(n, line);
                 break;
             }
+        }
+        if (flag != split) {
+            line_ignored(n, line);
+            continue;
         }
 
         const char *path = split + strspn(split, " \t"); // find the start of the path
         if (*path != '/') {
             line_ignored(n, line);
-            break;
+            continue;
         }
 
         if (line[bytes_read - 1] == '\n') {
