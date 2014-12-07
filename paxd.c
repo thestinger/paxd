@@ -181,7 +181,6 @@ int main(void) {
                 reinitialize();
             } else if (event->wd == watch_conf_dir && !strcmp(event->name, "paxd.conf")) {
                 fprintf(stderr, "configuration file created or replaced\n");
-                watch_conf = inotify_add_watch(inotify, "/etc/paxd.conf", IN_MODIFY);
                 reinitialize();
             } else {
                 handle_exception_event(event);
