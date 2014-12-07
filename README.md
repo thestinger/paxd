@@ -1,5 +1,5 @@
-`paxd` is a daemon for automatically maintaining PaX exceptions. It applies
-exceptions wheneven an executable is created / replaced. It also applies all of
+`paxd` is a daemon for automatically maintaining PaX exceptions. It re-applies
+exceptions whenever an executable is created / replaced. It also applies all of
 the exceptions at start-up and when the configuration file is modified.
 
 Since `paxd` watches the parent directory chain for each executable, it has no
