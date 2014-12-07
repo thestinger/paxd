@@ -133,9 +133,9 @@ static void reinitialize_watch_tree(const char *path) {
     struct dir_watch *info = g_hash_table_lookup(path_table, path);
     if (info) {
         g_hash_table_remove(watch_to_path, GINT_TO_POINTER(info->watch));
-        int watch = inotify_add_watch(inotify, path, IN_CREATE | IN_MOVED_TO);
-        if (watch != -1) {
-            g_hash_table_insert(watch_to_path, GINT_TO_POINTER(watch), g_strdup(path));
+        info->watch = inotify_add_watch(inotify, path, IN_CREATE | IN_MOVED_TO);
+        if (info->watch != -1) {
+            g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch), g_strdup(path));
         }
         g_hash_table_foreach(info->child_set, reinitialize_watch_tree_cb, NULL);
     } else {
