@@ -141,7 +141,7 @@ static void reinitialize_watch_tree(const char *path) {
     } else {
         char *flags = g_hash_table_lookup(exception_table, path);
         if (flags) {
-            printf("setting `%s` on `%s`", flags, path);
+            printf("setting `%s` on `%s`\n", flags, path);
             apply(flags, strlen(flags), path);
         }
     }
