@@ -1,10 +1,13 @@
 CC = clang
 CFLAGS := -std=c11 -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE \
+	  $(shell pkg-config --cflags glib-2.0) \
 	  -O2 -flto -fuse-ld=gold $(CFLAGS)
 LDFLAGS := -O2 -flto -fuse-ld=gold -Wl,--as-needed,--gc-sections $(LDFLAGS)
+LDLIBS := $(shell pkg-config --libs glib-2.0)
 
 ifeq ($(CC), clang)
-	CFLAGS += -Weverything -Wno-cast-align -Wno-disabled-macro-expansion
+	CFLAGS += -Weverything -Wno-cast-align -Wno-disabled-macro-expansion -Wno-documentation \
+		  -Wno-padded
 else
 	CFLAGS += -Wall -Wextra
 endif

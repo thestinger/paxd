@@ -3,7 +3,6 @@ Description=PaX exception daemon
 DefaultDependencies=no
 After=systemd-remount-fs.service
 Before=sysinit.target
-RequiresMountsFor=/var/lib/pacman
 
 [Service]
 ExecStart=/usr/bin/paxd

@@ -7,7 +7,7 @@
 
 #include "flags.h"
 
-static void apply(const char *flags, size_t flags_len, const char *path) {
+void apply(const char *flags, size_t flags_len, const char *path) {
     if (setxattr(path, "user.pax.flags", flags, flags_len, 0) == -1) {
         if (errno != ENOENT) {
             fprintf(stderr, "could not apply attributes to %s: %m\n", path);
@@ -19,7 +19,7 @@ static void line_ignored(off_t n, const char *line) {
     fprintf(stderr, "ignored invalid line %lld in /etc/paxd.conf: %s", (long long)n, line);
 }
 
-void update_attributes(void) {
+void update_attributes(flag_handler handler) {
     FILE *conf = fopen("/etc/paxd.conf", "r");
     if (!conf) {
         perror("could not open /etc/paxd.conf");
@@ -73,7 +73,7 @@ void update_attributes(void) {
         }
 
         size_t flags_len = (size_t)(split - flags);
-        apply(flags, flags_len, path);
+        handler(flags, flags_len, path);
     }
 
     free(line);

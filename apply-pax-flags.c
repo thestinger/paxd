@@ -3,6 +3,6 @@
 #include "flags.h"
 
 int main(void) {
-    update_attributes();
+    update_attributes(apply);
     return EXIT_SUCCESS;
 }
