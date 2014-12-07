@@ -15,14 +15,14 @@ void apply(const char *flags, size_t flags_len, const char *path) {
     }
 }
 
-static void line_ignored(off_t n, const char *line) {
-    fprintf(stderr, "ignored invalid line %lld in /etc/paxd.conf: %s", (long long)n, line);
+static void line_ignored(const char *path, off_t n, const char *line) {
+    fprintf(stderr, "ignored invalid line %lld in %s: %s", (long long)n, path, line);
 }
 
-void update_attributes(flag_handler handler) {
-    FILE *conf = fopen("/etc/paxd.conf", "r");
+void update_attributes(const char *config, flag_handler handler) {
+    FILE *conf = fopen(config, "r");
     if (!conf) {
-        perror("could not open /etc/paxd.conf");
+        fprintf(stderr, "could not open %s: %m\n", config);
         return;
     }
 
@@ -33,7 +33,7 @@ void update_attributes(flag_handler handler) {
         ssize_t bytes_read = getline(&line, &line_len, conf);
         if (bytes_read == -1) {
             if (ferror(conf)) {
-                perror("failed to read line from /etc/paxd.conf");
+                fprintf(stderr, "failed to read line from %s: %m\n", config);
             }
             break;
         }
@@ -46,7 +46,7 @@ void update_attributes(flag_handler handler) {
 
         const char *split = flags + strcspn(flags, " \t"); // find the end of the specified flags
         if (*split == '\0') {
-            line_ignored(n, line);
+            line_ignored(config, n, line);
             continue;
         }
 
@@ -58,13 +58,13 @@ void update_attributes(flag_handler handler) {
             }
         }
         if (flag != split) {
-            line_ignored(n, line);
+            line_ignored(config, n, line);
             continue;
         }
 
         const char *path = split + strspn(split, " \t"); // find the start of the path
         if (*path != '/') {
-            line_ignored(n, line);
+            line_ignored(config, n, line);
             continue;
         }
 

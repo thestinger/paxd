@@ -1,6 +1,7 @@
-#include <glib.h>
 #include <ctype.h>
 #include <err.h>
+#include <getopt.h>
+#include <glib.h>
 #include <limits.h>
 #include <stdalign.h>
 #include <stdbool.h>
@@ -102,7 +103,7 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
     g_free(path_prefix);
 }
 
-static void reinitialize(void) {
+static void reinitialize(const char *config) {
     if (inotify != -1) {
         close(inotify);
     }
@@ -113,15 +114,18 @@ static void reinitialize(void) {
         return;
     }
 
-    watch_conf = inotify_add_watch(inotify, "/etc/paxd.conf", IN_MODIFY);
-    watch_conf_dir = inotify_add_watch_x(inotify, "/etc/", IN_CREATE | IN_MOVED_TO);
+    watch_conf = inotify_add_watch(inotify, config, IN_MODIFY);
+
+    char *tmp = g_strdup(config);
+    watch_conf_dir = inotify_add_watch_x(inotify, dirname(tmp), IN_CREATE | IN_MOVED_TO);
+    g_free(tmp);
 
     reinitialize_table(&watch_to_path, NULL, NULL, NULL, g_free);
     reinitialize_table(&path_table, g_str_hash, g_str_equal, g_free, dir_watch_destroy);
     reinitialize_table(&exception_table, g_str_hash, g_str_equal, g_free, g_free);
 
     fprintf(stderr, "loading configuration and applying all exceptions\n");
-    update_attributes(handler);
+    update_attributes(config, handler);
 }
 
 static void reinitialize_watch_tree(const char *path);
@@ -158,8 +162,33 @@ static void handle_exception_event(struct inotify_event *event) {
     g_free(path);
 }
 
-int main(void) {
-    reinitialize();
+int main(int argc, char **argv) {
+    static const struct option opts[] = {
+        { "user", no_argument, 0, 'u' },
+        { 0, 0, 0, 0 }
+    };
+
+    bool user = false;
+    for (;;) {
+        int opt = getopt_long(argc, argv, "u", opts, NULL);
+        if (opt == -1) {
+            break;
+        }
+
+        if (opt == 'u') {
+            user = true;
+        }
+    }
+
+    const char *config;
+
+    if (user) {
+        config = g_build_filename(g_get_user_config_dir(), "paxd.conf", NULL);
+    } else {
+        config = "/etc/paxd.conf";
+    }
+
+    reinitialize(config);
 
     alignas(struct inotify_event) char buf[(sizeof(struct inotify_event) + NAME_MAX + 1) * 64];
 
@@ -176,13 +205,13 @@ int main(void) {
 
             if (event->wd == -1) {
                 fprintf(stderr, "event queue overflowed\n");
-                reinitialize();
+                reinitialize(config);
             } else if (event->wd == watch_conf) {
                 fprintf(stderr, "configuration file modified\n");
-                reinitialize();
+                reinitialize(config);
             } else if (event->wd == watch_conf_dir && !strcmp(event->name, "paxd.conf")) {
                 fprintf(stderr, "configuration file created or replaced\n");
-                reinitialize();
+                reinitialize(config);
             } else {
                 handle_exception_event(event);
             }
