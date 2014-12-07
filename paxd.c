@@ -120,6 +120,7 @@ static void reinitialize(void) {
     reinitialize_table(&path_table, g_str_hash, g_str_equal, g_free, dir_watch_destroy);
     reinitialize_table(&exception_table, g_str_hash, g_str_equal, g_free, g_free);
 
+    fprintf(stderr, "loading configuration and applying all exceptions\n");
     update_attributes(handler);
 }
 
@@ -141,7 +142,7 @@ static void reinitialize_watch_tree(const char *path) {
     } else {
         char *flags = g_hash_table_lookup(exception_table, path);
         if (flags) {
-            printf("setting `%s` on `%s`\n", flags, path);
+            fprintf(stderr, "setting `%s` on `%s`\n", flags, path);
             apply(flags, strlen(flags), path);
         }
     }
