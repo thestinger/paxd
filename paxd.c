@@ -1,16 +1,15 @@
-#include <ctype.h>
-#include <err.h>
 #include <getopt.h>
-#include <glib.h>
+#include <libgen.h>
 #include <limits.h>
 #include <stdalign.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <libgen.h>
 #include <sys/inotify.h>
+#include <unistd.h>
+
+#include <glib.h>
 
 #include "flags.h"
 
