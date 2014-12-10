@@ -71,36 +71,37 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
     g_hash_table_insert(exception_table, g_strdup(path), value);
     apply(flags, flags_len, path);
 
-    char *path_full = g_strdup(path);
-    char *path_prefix = g_strdup(path);
+    char *path_segment = g_strdup(path);
+    char *path_scratch = g_strdup(path);
 
     do {
-        dirname(path_prefix);
+        char *dir = dirname(path_scratch);
 
-        struct dir_watch *info = g_hash_table_lookup(path_table, path_prefix);
+        struct dir_watch *info = g_hash_table_lookup(path_table, dir);
         if (info) {
-            if (!g_hash_table_contains(info->child_set, path_prefix)) {
-                g_hash_table_insert(info->child_set, g_strdup(path_full), NULL);
+            if (!g_hash_table_contains(info->child_set, dir)) {
+                g_hash_table_insert(info->child_set, g_strdup(path_segment), NULL);
             }
         } else {
             info = g_malloc(sizeof(struct dir_watch));
-            g_hash_table_insert(path_table, g_strdup(path_prefix), info);
+            g_hash_table_insert(path_table, g_strdup(dir), info);
 
             info->child_set = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
-            g_hash_table_insert(info->child_set, g_strdup(path_full), NULL);
+            g_hash_table_insert(info->child_set, g_strdup(path_segment), NULL);
 
-            info->watch = inotify_add_watch(inotify, path_prefix, IN_CREATE | IN_MOVED_TO);
+            info->watch = inotify_add_watch(inotify, dir, IN_CREATE | IN_MOVED_TO);
             if (info->watch != -1) {
                 g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch),
-                                    g_strdup(path_prefix));
+                                    g_strdup(dir));
             }
         }
 
-        strcpy(path_full, path_prefix);
-    } while (strcmp(path_prefix, "/"));
+        strcpy(path_segment, dir);
+        strcpy(path_scratch, path_segment);
+    } while (strcmp(path_segment, "/") && strcmp(path_segment, "."));
 
-    g_free(path_full);
-    g_free(path_prefix);
+    g_free(path_segment);
+    g_free(path_scratch);
 }
 
 static void reinitialize(const char *config) {
@@ -181,11 +182,19 @@ int main(int argc, char **argv) {
     }
 
     const char *config;
+    const char *working_directory;
 
     if (user) {
         config = g_build_filename(g_get_user_config_dir(), "paxd.conf", NULL);
+        working_directory = g_get_home_dir();
     } else {
         config = "/etc/paxd.conf";
+        working_directory = "/";
+    }
+
+    if (chdir(working_directory) == -1) {
+        perror("chdir");
+        return EXIT_FAILURE;
     }
 
     reinitialize(config);

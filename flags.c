@@ -63,10 +63,6 @@ void update_attributes(const char *config, flag_handler handler) {
         }
 
         const char *path = split + strspn(split, " \t"); // find the start of the path
-        if (*path != '/') {
-            line_ignored(config, n, line);
-            continue;
-        }
 
         if (line[bytes_read - 1] == '\n') {
             line[bytes_read - 1] = '\0';
