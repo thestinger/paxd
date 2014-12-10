@@ -69,7 +69,7 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
     value[flags_len] = '\0';
 
     g_hash_table_insert(exception_table, g_strdup(path), value);
-    apply(flags, flags_len, path);
+    set_pax_flags(flags, flags_len, path);
 
     char *path_segment = g_strdup(path);
     char *path_scratch = g_strdup(path);
@@ -148,7 +148,7 @@ static void reinitialize_watch_tree(const char *path) {
         char *flags = g_hash_table_lookup(exception_table, path);
         if (flags) {
             fprintf(stderr, "setting `%s` on `%s`\n", flags, path);
-            apply(flags, strlen(flags), path);
+            set_pax_flags(flags, strlen(flags), path);
         }
     }
 }
@@ -165,19 +165,26 @@ static void handle_exception_event(struct inotify_event *event) {
 
 int main(int argc, char **argv) {
     static const struct option opts[] = {
+        { "apply", no_argument, 0, 'a' },
         { "user", no_argument, 0, 'u' },
         { 0, 0, 0, 0 }
     };
 
+    bool apply = false;
     bool user = false;
     for (;;) {
-        int opt = getopt_long(argc, argv, "u", opts, NULL);
+        int opt = getopt_long(argc, argv, "au", opts, NULL);
         if (opt == -1) {
             break;
         }
 
-        if (opt == 'u') {
+        switch (opt) {
+        case 'a':
+            apply = true;
+            break;
+        case 'u':
             user = true;
+            break;
         }
     }
 
@@ -195,6 +202,11 @@ int main(int argc, char **argv) {
     if (chdir(working_directory) == -1) {
         perror("chdir");
         return EXIT_FAILURE;
+    }
+
+    if (apply) {
+        update_attributes(config, set_pax_flags);
+        return EXIT_SUCCESS;
     }
 
     reinitialize(config);

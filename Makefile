@@ -12,16 +12,14 @@ else
 	CFLAGS += -Wall -Wextra
 endif
 
-all: apply-pax-flags paxd
-apply-pax-flags: apply-pax-flags.o flags.o
+all: paxd
 paxd: paxd.o flags.o
 flags: flags.c flags.h
 
 clean:
-	rm -f apply-pax-flags apply-pax-flags.o paxd paxd.o flags.o
+	rm -f paxd paxd.o flags.o
 
 install: paxd paxd.conf
-	install -Dm755 apply-pax-flags $(DESTDIR)/usr/bin/apply-pax-flags
 	install -Dm755 paxd $(DESTDIR)/usr/bin/paxd
 	install -Dm600 paxd.conf $(DESTDIR)/etc/paxd.conf
 	install -Dm644 paxd.service $(DESTDIR)/usr/lib/systemd/system/paxd.service

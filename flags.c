@@ -7,7 +7,7 @@
 
 #include "flags.h"
 
-void apply(const char *flags, size_t flags_len, const char *path) {
+void set_pax_flags(const char *flags, size_t flags_len, const char *path) {
     if (setxattr(path, "user.pax.flags", flags, flags_len, 0) == -1) {
         if (errno != ENOENT) {
             fprintf(stderr, "could not apply attributes to %s: %m\n", path);
