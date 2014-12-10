@@ -24,7 +24,7 @@ install: paxd paxd.conf
 	install -Dm755 apply-pax-flags $(DESTDIR)/usr/bin/apply-pax-flags
 	install -Dm755 paxd $(DESTDIR)/usr/bin/paxd
 	install -Dm600 paxd.conf $(DESTDIR)/etc/paxd.conf
-	install -Dm644 system.service $(DESTDIR)/usr/lib/systemd/system/paxd.service
+	install -Dm644 paxd.service $(DESTDIR)/usr/lib/systemd/system/paxd.service
 	install -Dm644 user.service $(DESTDIR)/usr/lib/systemd/user/paxd.service
 	mkdir -p $(DESTDIR)/usr/lib/systemd/system/sysinit.target.wants
 	ln -t $(DESTDIR)/usr/lib/systemd/system/sysinit.target.wants -sf ../paxd.service
