@@ -15,15 +15,6 @@
 
 #define UNUSED __attribute__((unused))
 
-static int inotify_add_watch_x(int fd, const char *pathname, uint32_t mask) {
-    int watch = inotify_add_watch(fd, pathname, mask);
-    if (watch == -1) {
-        perror("inotify_add_watch");
-        exit(EXIT_FAILURE);
-    }
-    return watch;
-}
-
 static int inotify = -1;
 static int watch_conf = -1;
 static int watch_conf_dir = -1;
@@ -114,7 +105,7 @@ static void reinitialize(const char *config) {
     watch_conf = inotify_add_watch(inotify, config, IN_MODIFY);
 
     char *tmp = g_strdup(config);
-    watch_conf_dir = inotify_add_watch_x(inotify, dirname(tmp), IN_CREATE | IN_MOVED_TO);
+    watch_conf_dir = inotify_add_watch(inotify, dirname(tmp), IN_CREATE | IN_MOVED_TO);
     g_free(tmp);
 
     reinitialize_table(&watch_to_path, NULL, NULL, NULL, g_free);
