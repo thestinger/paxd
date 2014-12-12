@@ -63,10 +63,7 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
         return; // duplicate exception
     }
 
-    char *value = g_malloc(flags_len + 1);
-    memcpy(value, flags, flags_len);
-    value[flags_len] = '\0';
-
+    char *value = g_strndup(flags, flags_len);
     g_hash_table_insert(exception_table, g_strdup(path), value);
     set_pax_flags(flags, flags_len, path);
 
@@ -99,8 +96,8 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
         strcpy(path_scratch, path_segment);
     } while (strcmp(path_segment, "/") && strcmp(path_segment, "."));
 
-    g_free(path_segment);
     g_free(path_scratch);
+    g_free(path_segment);
 }
 
 static void reinitialize(const char *config) {
