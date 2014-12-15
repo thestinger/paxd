@@ -145,9 +145,13 @@ static void handle_exception_event(struct inotify_event *event) {
     if (!path_prefix) {
         return;
     }
-    char *path = g_build_filename(path_prefix, event->name, NULL);
-    reinitialize_watch_tree(path);
-    g_free(path);
+    if (!strcmp(path_prefix, ".")) {
+        reinitialize_watch_tree(event->name);
+    } else {
+        char *path = g_build_filename(path_prefix, event->name, NULL);
+        reinitialize_watch_tree(path);
+        g_free(path);
+    }
 }
 
 int main(int argc, char **argv) {
