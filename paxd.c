@@ -49,6 +49,13 @@ static void reinitialize_table(GHashTable **table, GHashFunc hash_fn, GEqualFunc
     }
 }
 
+static void add_dir_watch(struct dir_watch *info, const char *dir) {
+    info->watch = inotify_add_watch(inotify, dir, IN_ONLYDIR | IN_CREATE | IN_MOVED_TO);
+    if (info->watch != -1) {
+        g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch), g_strdup(dir));
+    }
+}
+
 static void handler(const char *flags, size_t flags_len, const char *path) {
     if (g_hash_table_contains(exception_table, path)) {
         return; // duplicate exception
@@ -76,11 +83,7 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
             info->child_set = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
             g_hash_table_insert(info->child_set, g_strdup(path_segment), NULL);
 
-            info->watch = inotify_add_watch(inotify, dir, IN_CREATE | IN_MOVED_TO);
-            if (info->watch != -1) {
-                g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch),
-                                    g_strdup(dir));
-            }
+            add_dir_watch(info, dir);
         }
 
         strcpy(path_segment, dir);
@@ -126,10 +129,7 @@ static void reinitialize_watch_tree(const char *path) {
     struct dir_watch *info = g_hash_table_lookup(path_table, path);
     if (info) {
         g_hash_table_remove(watch_to_path, GINT_TO_POINTER(info->watch));
-        info->watch = inotify_add_watch(inotify, path, IN_CREATE | IN_MOVED_TO);
-        if (info->watch != -1) {
-            g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch), g_strdup(path));
-        }
+        add_dir_watch(info, path);
         g_hash_table_foreach(info->child_set, reinitialize_watch_tree_cb, NULL);
     } else {
         char *flags = g_hash_table_lookup(exception_table, path);
