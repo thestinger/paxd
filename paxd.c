@@ -19,7 +19,7 @@ static int inotify = -1;
 static int watch_conf = -1;
 static int watch_conf_dir = -1;
 
-// int fd -> char *path
+// int fd -> char *path (owned by path_table)
 static GHashTable *watch_to_path = NULL;
 
 // char *path -> struct dir_watch *info
@@ -49,10 +49,10 @@ static void reinitialize_table(GHashTable **table, GHashFunc hash_fn, GEqualFunc
     }
 }
 
-static void add_dir_watch(struct dir_watch *info, const char *dir) {
+static void add_dir_watch(struct dir_watch *info, char *dir) {
     info->watch = inotify_add_watch(inotify, dir, IN_ONLYDIR | IN_CREATE | IN_MOVED_TO);
     if (info->watch != -1) {
-        g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch), g_strdup(dir));
+        g_hash_table_insert(watch_to_path, GINT_TO_POINTER(info->watch), dir);
     }
 }
 
@@ -77,13 +77,14 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
                 g_hash_table_insert(info->child_set, g_strdup(path_segment), NULL);
             }
         } else {
+            char *dir_copy = g_strdup(dir);
             info = g_malloc(sizeof(struct dir_watch));
-            g_hash_table_insert(path_table, g_strdup(dir), info);
+            g_hash_table_insert(path_table, dir_copy, info);
 
             info->child_set = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
             g_hash_table_insert(info->child_set, g_strdup(path_segment), NULL);
 
-            add_dir_watch(info, dir);
+            add_dir_watch(info, dir_copy);
         }
 
         strcpy(path_segment, dir);
@@ -111,7 +112,7 @@ static void reinitialize(const char *config) {
     watch_conf_dir = inotify_add_watch(inotify, dirname(tmp), IN_CREATE | IN_MOVED_TO);
     g_free(tmp);
 
-    reinitialize_table(&watch_to_path, NULL, NULL, NULL, g_free);
+    reinitialize_table(&watch_to_path, NULL, NULL, NULL, NULL);
     reinitialize_table(&path_table, g_str_hash, g_str_equal, g_free, dir_watch_destroy);
     reinitialize_table(&exception_table, g_str_hash, g_str_equal, g_free, g_free);
 
@@ -126,10 +127,11 @@ static void reinitialize_watch_tree_cb(void *key, UNUSED void *value, UNUSED voi
 }
 
 static void reinitialize_watch_tree(const char *path) {
-    struct dir_watch *info = g_hash_table_lookup(path_table, path);
-    if (info) {
+    void *key, *value;
+    if (g_hash_table_lookup_extended(path_table, path, &key, &value)) {
+        struct dir_watch *info = value;
         g_hash_table_remove(watch_to_path, GINT_TO_POINTER(info->watch));
-        add_dir_watch(info, path);
+        add_dir_watch(info, key);
         g_hash_table_foreach(info->child_set, reinitialize_watch_tree_cb, NULL);
     } else {
         char *flags = g_hash_table_lookup(exception_table, path);
