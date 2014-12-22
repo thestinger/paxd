@@ -73,7 +73,7 @@ static void handler(const char *flags, size_t flags_len, const char *path) {
 
         struct dir_watch *info = g_hash_table_lookup(path_table, dir);
         if (info) {
-            if (!g_hash_table_contains(info->child_set, dir)) {
+            if (!g_hash_table_contains(info->child_set, path_segment)) {
                 g_hash_table_insert(info->child_set, g_strdup(path_segment), NULL);
             }
         } else {
