@@ -50,10 +50,13 @@ void update_attributes(const char *config, flag_handler handler) {
             continue;
         }
 
-        const char *valid = "pemrs";
+        char valid[] = "pemrs";
         const char *flag;
         for (flag = flags; flag < split; flag++) {
-            if (!strchr(valid, tolower(*flag))) {
+            char *slot = strchr(valid, tolower(*flag));
+            if (slot) {
+                *slot = '-';
+            } else {
                 break;
             }
         }
