@@ -7,7 +7,7 @@ LDLIBS := $(shell pkg-config --libs glib-2.0)
 
 ifeq ($(CC), clang)
 	CFLAGS += -Weverything -Wno-cast-align -Wno-disabled-macro-expansion -Wno-documentation \
-		  -Wno-padded
+		  -Wno-padded -Wno-reserved-id-macro
 else
 	CFLAGS += -Wall -Wextra
 endif
