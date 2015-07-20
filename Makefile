@@ -1,4 +1,3 @@
-CC = clang
 CFLAGS := -std=c11 -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE \
 	  $(shell pkg-config --cflags glib-2.0) \
 	  -O2 -flto -fuse-ld=gold $(CFLAGS)
