@@ -10,3 +10,12 @@ tried with.
 The sample `paxd.conf` is targeted at Arch Linux, and the expectation is that
 maintainers / users of other distributions will maintain a modified version
 downstream.
+
+Setting up user level paxd
+==========================
+
+Copy or symlink `user.conf` to `~/.config/paxd.conf`
+
+    systemctl --user enable paxd
+    systemctl --user start paxd
+
