@@ -11,11 +11,13 @@ The sample `paxd.conf` is targeted at Arch Linux, and the expectation is that
 maintainers / users of other distributions will maintain a modified version
 downstream.
 
-Setting up user level paxd
-==========================
+## Setting up user level paxd
 
-Copy or symlink `user.conf` to `~/.config/paxd.conf`
+Copy `user.conf` to `~/.config/paxd.conf`, and then enable the user service:
 
     systemctl --user enable paxd
     systemctl --user start paxd
 
+Files controlled by non-root shouldn't be added to the global configuration
+file, as those users would be able to use symlinks to set exceptions on any
+files.
